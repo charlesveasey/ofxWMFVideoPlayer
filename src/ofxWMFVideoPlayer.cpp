@@ -248,7 +248,7 @@ void	ofxWMFVideoPlayer::	pause()
 
 
 float 			ofxWMFVideoPlayer::	getPosition() {
-	return _player->getPosition();
+	return _player->getPosition() /  _player->getDuration();
 }
 
 float 			ofxWMFVideoPlayer::	getDuration() {
@@ -257,7 +257,7 @@ float 			ofxWMFVideoPlayer::	getDuration() {
 
 void ofxWMFVideoPlayer::setPosition(float pos)
 {
-	_player->setPosition(pos);
+	_player->setPosition(pos * _player->getDuration());
 }
 
 float	ofxWMFVideoPlayer::getHeight() { return _player->getHeight(); }
