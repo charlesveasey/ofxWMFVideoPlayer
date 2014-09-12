@@ -34,6 +34,8 @@ class ofxWMFVideoPlayer {
 
 		bool _waitForLoadedToPlay;
 		bool _isLooping;
+		bool _wantToSetVolume;
+		float _currentVolume;
 
 		bool _sharedTextureCreated;
 		
@@ -45,10 +47,11 @@ class ofxWMFVideoPlayer {
 		void                OnPlayerEvent(HWND hwnd, WPARAM pUnkPtr);
 		bool				loadEventSent;
 		bool				bLoaded;
+		float _frameRate;
 
 	public:
 	CPlayer*	_player;
-			ofTexture _tex;
+	ofTexture _tex;
 
 	int _id;
 	
@@ -56,7 +59,7 @@ class ofxWMFVideoPlayer {
 	 ~ofxWMFVideoPlayer();
 
 	 bool				loadMovie(string name);
-	 bool 				loadMovie(string name_left, string name_right) ;
+	 //bool 				loadMovie(string name_left, string name_right) ;
 	 void				close();
 	 void				update();
 	
@@ -66,8 +69,12 @@ class ofxWMFVideoPlayer {
 
 	 float				getPosition();
 	 float				getDuration();
+	 float				getFrameRate();
 
 	 void				setPosition(float pos);
+
+	 void				setVolume(float vol);
+	 float				getVolume();
 
 	 float				getHeight();
 	 float				getWidth();

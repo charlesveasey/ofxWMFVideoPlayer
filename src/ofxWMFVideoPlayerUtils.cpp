@@ -109,6 +109,7 @@ CPlayer::CPlayer(HWND hVideo, HWND hEvent) :
     m_nRefCount(1),
 	m_pEVRPresenter(NULL),
 	m_pSequencerSource(NULL),
+	m_pVolumeControl(NULL),
 	_previousTopoID(0),
 	_isLooping(false)
 {
@@ -304,6 +305,7 @@ HRESULT CPlayer::OpenMultipleURL(vector<const WCHAR *> &urls)
 
 
 	m_state = OpenPending;
+	_currentVolume = 1.0f;
 
 	// If SetTopology succeeds, the media session will queue an 
 	// MESessionTopologySet event.
@@ -382,6 +384,7 @@ HRESULT CPlayer::OpenURL(const WCHAR *sURL)
     }
 
     m_state = OpenPending;
+	_currentVolume = 1.0f;
 
     // If SetTopology succeeds, the media session will queue an 
     // MESessionTopologySet event.
@@ -479,6 +482,43 @@ HRESULT CPlayer::setPosition(float pos)
 	PropVariantClear(&varStart);
 
 
+
+	return S_OK;
+}
+
+HRESULT CPlayer::setVolume(float vol)
+{
+	//Should we lock here as well ?
+	if (m_pSession == NULL)
+	{
+		ofLogError("ofxWMFVideoPlayer", "setVolume: Error session is null");
+		return E_FAIL;
+	}
+	if (m_pVolumeControl == NULL)
+	{
+
+		HRESULT hr = MFGetService(m_pSession, MR_STREAM_VOLUME_SERVICE, __uuidof(IMFAudioStreamVolume), (void**)&m_pVolumeControl);
+		//HRESULT hr = MFGetService(m_pSession, MR_POLICY_VOLUME_SERVICE, __uuidof(IMFSimpleAudioVolume), (void**)&m_pVolumeControl);
+		_currentVolume = vol;
+		if (FAILED(hr))
+		{
+			ofLogError("ofxWMFVideoPlayer", "setVolume: Error while getting sound control interface");
+			return E_FAIL;
+		}
+
+	}
+	UINT32 nChannels;
+	m_pVolumeControl->GetChannelCount(&nChannels);
+	//float * volumes= new float[nChannels];
+	for (int i = 0; i < nChannels; i++)
+	{
+		m_pVolumeControl->SetChannelVolume(i, vol);
+	}
+
+	//	m_pVolumeControl->SetAllVolumes(nChannels,vol);
+	//	delete[] volumes;
+
+	_currentVolume = vol;
 
 	return S_OK;
 }
@@ -793,6 +833,7 @@ HRESULT CPlayer::CloseSession()
 	
 
     if (m_pVideoDisplay != NULL ) SafeRelease(&m_pVideoDisplay);
+	if (m_pVolumeControl != NULL) SafeRelease(&m_pVolumeControl);
 
     // First close the media session.
     if (m_pSession)
@@ -1375,6 +1416,53 @@ float CPlayer::getPosition() {
 	}
 	SafeRelease(&pClock);
 	return position;
+}
+
+float CPlayer::getFrameRate() {
+	float fps = 0.0;
+	if (m_pSource == NULL)
+		return 0.0;
+	IMFPresentationDescriptor *pDescriptor = NULL;
+	IMFStreamDescriptor *pStreamHandler = NULL;
+	IMFMediaTypeHandler *pMediaType = NULL;
+	IMFMediaType  *pType;
+	DWORD nStream;
+	if FAILED(m_pSource->CreatePresentationDescriptor(&pDescriptor)) goto done;
+	if FAILED(pDescriptor->GetStreamDescriptorCount(&nStream)) goto done;
+	for (int i = 0; i < nStream; i++)
+	{
+		BOOL selected;
+		GUID type;
+		if FAILED(pDescriptor->GetStreamDescriptorByIndex(i, &selected, &pStreamHandler)) goto done;
+		if FAILED(pStreamHandler->GetMediaTypeHandler(&pMediaType)) goto done;
+		if FAILED(pMediaType->GetMajorType(&type)) goto done;
+		if FAILED(pMediaType->GetCurrentMediaType(&pType)) goto done;
+		if (type  == MFMediaType_Video)
+		{
+			UINT32 num = 0;
+			UINT32 denum = 1;
+
+			MFGetAttributeRatio(
+				pType,
+				MF_MT_FRAME_RATE,
+				&num,
+				&denum
+				);
+			if (denum != 0) fps = (float) num /  (float) denum;
+		}
+	
+
+		SafeRelease(&pStreamHandler);
+		SafeRelease(&pMediaType);
+		SafeRelease(&pType);
+		if (fps != 0.0) break; // we found the right stream, no point in continuing the loop
+	}
+done:
+	SafeRelease(&pDescriptor);
+	SafeRelease(&pStreamHandler);
+	SafeRelease(&pMediaType);
+	SafeRelease(&pType);
+	return fps;
 }
 
 
