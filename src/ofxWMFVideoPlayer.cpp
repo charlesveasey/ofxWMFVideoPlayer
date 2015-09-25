@@ -36,14 +36,15 @@ ofxWMFVideoPlayer::ofxWMFVideoPlayer() : _player(NULL)
 {
 	
 	if (_instanceCount ==0)  {
-		if (!ofIsGLProgrammableRenderer()){
+		// false negatives on of-0.9.0
+		/*if (!ofIsGLProgrammableRenderer()){
 			if(wglewIsSupported("WGL_NV_DX_interop")){
 				ofLogVerbose("ofxWMFVideoPlayer") << "WGL_NV_DX_interop supported";
 			}else{
 				ofLogError("ofxWMFVideoPlayer") << "WGL_NV_DX_interop not supported. Upgrade your graphc drivers and try again.";
 				return;
 			}
-		}
+		}*/
 
 
 		HRESULT hr = MFStartup(MF_VERSION);
