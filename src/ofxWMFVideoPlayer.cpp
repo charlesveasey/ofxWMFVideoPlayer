@@ -303,10 +303,6 @@ float	ofxWMFVideoPlayer::getWidth() { return _player->getWidth(); }
 
 void  ofxWMFVideoPlayer::setLoop(bool isLooping) { _isLooping = isLooping; _player->setLooping(isLooping); }
 
-ofTexture& ofxWMFVideoPlayer::getTexture()
-{
-	return _tex;
-}
 
 
 //-----------------------------------

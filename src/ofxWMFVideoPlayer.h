@@ -88,10 +88,8 @@ class ofxWMFVideoPlayer {
 
 	 void				bind();
 	 void				unbind();
-
-	 ofTexture&			getTexture();
 	
-	ofEvent<bool>       videoLoadEvent;
+		ofEvent<bool>       videoLoadEvent;
 
 
 
